@@ -1,97 +1,87 @@
 # InsightLens – AI-Powered Time-Series Forecasting
 
-InsightLens is an AI-powered time-series forecasting system that compares
-multiple machine learning and statistical forecasting models and
-automatically selects the best-performing model.
+InsightLens is an AI-powered time-series forecasting system that predicts future values using multiple machine learning and statistical forecasting models.
 
-## Features
+The system trains four different forecasting models — ARIMA, Prophet, XGBoost, and LSTM — compares their forecast results, automatically selects the model with the lowest average forecast, and displays the results through an interactive web dashboard.
 
-- Time-series data generation
-- Feature engineering
-- ARIMA forecasting
-- Prophet forecasting
-- XGBoost forecasting
-- LSTM forecasting
+## 🚀 Features
+
+- Time-series data forecasting
+- Multiple forecasting models
 - Automatic model comparison
-- Automatic best-model selection
-- FastAPI REST API
+- Best model selection
+- 30-day forecast generation
+- REST API using FastAPI
 - Interactive forecasting dashboard
 - Forecast visualization using charts
-- Configurable forecast horizon
+- JSON-based API responses
 
-## Models Used
+## 🤖 Forecasting Models
 
-| Model | Type |
-|---|---|
-| ARIMA | Statistical Time-Series |
-| Prophet | Time-Series Forecasting |
-| XGBoost | Machine Learning |
-| LSTM | Deep Learning |
+### ARIMA
+A statistical time-series forecasting model used to capture trends and patterns in sequential data.
 
-## How It Works
+### Prophet
+A forecasting model designed to handle time-series trends and seasonality.
 
-1. Time-series data is prepared.
-2. Features are generated.
-3. Four forecasting models generate predictions.
-4. The average forecast from each model is calculated.
-5. The models are compared.
-6. The model with the lowest average forecast is selected.
-7. The selected model's forecast is displayed on the dashboard.
+### XGBoost
+A gradient boosting machine-learning model used for forecasting using engineered time-series features.
 
-## API Endpoints
+### LSTM
+A deep-learning recurrent neural network designed to learn patterns from sequential data.
 
-### Home
+## 🏆 Model Selection
 
-GET `/`
+InsightLens trains all four models and calculates the average forecast produced by each model.
 
-Checks whether the API is running.
+The model with the lowest average forecast is automatically selected as the best model.
 
-### Individual Forecast
+Example:
 
-GET `/forecast/{model_name}?days=30`
+| Model | Average Forecast |
+|-------|-----------------:|
+| ARIMA | 186.36 |
+| Prophet | 184.63 |
+| XGBoost | 105.79 |
+| LSTM | 188.16 |
 
-Supported models:
+**Best Model: XGBoost**
 
-- arima
-- prophet
-- xgboost
-- lstm
-
-### Best Forecast
-
-GET `/forecast/best?days=30`
-
-Runs all forecasting models and returns the selected best model
-along with model comparison values and forecast results.
-
-## Dashboard
-
-The dashboard provides:
-
-- Forecast day selection
-- Best model display
-- Model comparison
-- Forecast visualization
-- Forecast results table
-
-## Technologies
+## 🛠️ Technologies Used
 
 - Python
-- FastAPI
 - Pandas
 - NumPy
+- FastAPI
+- Uvicorn
 - Scikit-learn
 - XGBoost
-- Prophet
 - TensorFlow / Keras
+- Prophet
+- Statsmodels
 - HTML
 - CSS
 - JavaScript
-- Chart.js
 
-## Running the Project
+## 📁 Project Structure
 
-Activate the virtual environment and start the FastAPI server:
-
-```bash
-uvicorn api:app --reload
+```text
+InsightLens/
+│
+├── data/
+│   └── generate_data.py
+│
+├── models/
+│   ├── arima_model.py
+│   ├── prophet_model.py
+│   ├── xgboost_model.py
+│   └── lstm_model.py
+│
+├── outputs/
+│   └── forecast_data.csv
+│
+├── api.py
+├── dashboard.html
+├── feature_engineering.py
+├── model_selector.py
+└── README.md
