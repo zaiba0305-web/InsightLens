@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>InsightLens Forecasting Dashboard</title>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: #f4f7fb;
+            color: #16233b;
+        }
+
+        header {
+            background: #111827;
+            color: white;
+            padding: 30px 7%;
+        }
+
+        header h1 {
+            font-size: 38px;
+            margin-bottom: 8px;
+        }
+
+        header p {
+            font-size: 19px;
+            color: #dbe4f0;
+        }
+
+        .container {
+            width: 92%;
+            max-width: 1500px;
+            margin: 35px auto;
+        }
+
+        .card {
+            background: white;
+            border-radius: 18px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+        }
+
+        .card h2 {
+            font-size: 30px;
+            margin-bottom: 25px;
+        }
+
+        /* SETTINGS */
+
+        .settings {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .settings label {
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .settings input {
+            width: 130px;
+            padding: 15px;
+            border: 1px solid #cbd5e1;
+            border-radius: 10px;
+            font-size: 18px;
+        }
+
+        button {
+            padding: 15px 25px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background: #1d4ed8;
+        }
+
+        #status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            display: none;
+            font-size: 17px;
+        }
+
+        .success {
+            display: block !important;
+            background: #eaf3ff;
+            color: #1456c5;
+        }
+
+        .error {
+            display: block !important;
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        /* BEST MODEL */
+
+        .best-model {
+            text-align: center;
+        }
+
+        .best-model-name {
+            font-size: 48px;
+            font-weight: bold;
+            color: #2563eb;
+            margin-top: 10px;
+        }
+
+        /* MODEL COMPARISON */
+
+        .models {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+        }
+
+        .model-box {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 15px;
+            padding: 25px;
+        }
+
+        .model-box h3 {
+            font-size: 23px;
+            margin-bottom: 15px;
+        }
+
+        .model-value {
+            font-size: 30px;
+            font-weight: bold;
+        }
+
+        .model-box.best {
+            border: 3px solid #2563eb;
+            background: #eff6ff;
+        }
+
+        .best-label {
+            display: inline-block;
+            margin-top: 12px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            background: #2563eb;
+            color: white;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        /* CHART */
+
+        .chart-container {
+            position: relative;
+            height: 500px;
+        }
+
+        /* TABLE */
+
+        .table-wrapper {
+            max-height: 550px;
+            overflow-y: auto;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: #111827;
+            color: white;
+            padding: 16px;
+            text-align: left;
+            position: sticky;
+            top: 0;
+        }
+
+        td {
+            padding: 14px 16px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        tr:hover {
+            background: #f8fafc;
+        }
+
+        footer {
+            text-align: center;
+            padding: 30px;
+            color: #64748b;
+        }
+
+        /* RESPONSIVE */
+
+        @media (max-width: 1000px) {
+            .models {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 600px) {
+            header h1 {
+                font-size: 30px;
+            }
+
+            .models {
+                grid-template-columns: 1fr;
+            }
+
+            .settings {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .chart-container {
+                height: 350px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>InsightLens</h1>
+    <p>AI-Powered Time-Series Forecasting Dashboard</p>
+</header>
+
+<div class="container">
+
+    <!-- SETTINGS -->
+    <div class="card">
+        <h2>Forecast Settings</h2>
+
+        <div class="settings">
+
+            <label for="days">Forecast Days:</label>
+
+            <input
+                type="number"
+                id="days"
+                value="30"
+                min="1"
+                max="365"
+            >
+
+            <button onclick="generateForecast()">
+                Generate Forecast
+            </button>
+
+        </div>
+
+        <div id="status"></div>
+    </div>
+
+
+    <!-- BEST MODEL -->
+    <div class="card best-model">
+
+        <h2>Best Model</h2>
+
+        <div id="bestModel" class="best-model-name">
+            -
+        </div>
+
+    </div>
+
+
+    <!-- MODEL COMPARISON -->
+    <div class="card">
+
+        <h2>Model Comparison</h2>
+
+        <div class="models">
+
+            <div class="model-box" id="arimaBox">
+                <h3>ARIMA</h3>
+                <div class="model-value" id="arimaValue">-</div>
+            </div>
+
+            <div class="model-box" id="prophetBox">
+                <h3>Prophet</h3>
+                <div class="model-value" id="prophetValue">-</div>
+            </div>
+
+            <div class="model-box" id="xgboostBox">
+                <h3>XGBoost</h3>
+                <div class="model-value" id="xgboostValue">-</div>
+            </div>
+
+            <div class="model-box" id="lstmBox">
+                <h3>LSTM</h3>
+                <div class="model-value" id="lstmValue">-</div>
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- CHART -->
+    <div class="card">
+
+        <h2>Forecast Visualization</h2>
+
+        <div class="chart-container">
+            <canvas id="forecastChart"></canvas>
+        </div>
+
+    </div>
+
+
+    <!-- FORECAST TABLE -->
+    <div class="card">
+
+        <h2>Forecast Results</h2>
+
+        <div class="table-wrapper">
+
+            <table>
+
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Forecast</th>
+                    </tr>
+                </thead>
+
+                <tbody id="forecastTable">
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<footer>
+    InsightLens Forecasting System
+</footer>
+
+
+<script>
+
+    let forecastChart = null;
+
+
+    async function generateForecast() {
+
+        const days = document.getElementById("days").value;
+
+        const status = document.getElementById("status");
+
+        if (!days || days <= 0) {
+
+            status.className = "error";
+
+            status.innerText = "Please enter a valid number of days.";
+
+            return;
+        }
+
+
+        status.className = "success";
+
+        status.innerText =
+            "Generating forecasts using ARIMA, Prophet, XGBoost and LSTM... Please wait.";
+
+
+        try {
+
+            const response =
+                await fetch(`/forecast/best?days=${days}`);
+
+
+            const data = await response.json();
+
+
+            if (!response.ok) {
+
+                throw new Error(
+                    data.detail || "Failed to generate forecast."
+                );
+            }
+
+
+            /* BEST MODEL */
+
+            document.getElementById("bestModel").innerText =
+                data.best_model.toUpperCase();
+
+
+            /* MODEL AVERAGES */
+
+            document.getElementById("arimaValue").innerText =
+                Number(data.model_averages.arima).toFixed(2);
+
+            document.getElementById("prophetValue").innerText =
+                Number(data.model_averages.prophet).toFixed(2);
+
+            document.getElementById("xgboostValue").innerText =
+                Number(data.model_averages.xgboost).toFixed(2);
+
+            document.getElementById("lstmValue").innerText =
+                Number(data.model_averages.lstm).toFixed(2);
+
+
+            /* REMOVE PREVIOUS BEST HIGHLIGHT */
+
+            document.getElementById("arimaBox").classList.remove("best");
+
+            document.getElementById("prophetBox").classList.remove("best");
+
+            document.getElementById("xgboostBox").classList.remove("best");
+
+            document.getElementById("lstmBox").classList.remove("best");
+
+
+            /* HIGHLIGHT BEST MODEL */
+
+            const bestBox =
+                document.getElementById(data.best_model + "Box");
+
+            if (bestBox) {
+
+                bestBox.classList.add("best");
+
+            }
+
+
+            /* FORECAST TABLE */
+
+            const table =
+                document.getElementById("forecastTable");
+
+            table.innerHTML = "";
+
+
+            const dates = [];
+
+            const values = [];
+
+
+            data.forecast.forEach(item => {
+
+                const row =
+                    document.createElement("tr");
+
+
+                const dateCell =
+                    document.createElement("td");
+
+                dateCell.innerText =
+                    new Date(item.date).toLocaleDateString();
+
+
+                const forecastCell =
+                    document.createElement("td");
+
+                forecastCell.innerText =
+                    Number(item.forecast).toFixed(2);
+
+
+                row.appendChild(dateCell);
+
+                row.appendChild(forecastCell);
+
+                table.appendChild(row);
+
+
+                dates.push(
+                    new Date(item.date).toLocaleDateString()
+                );
+
+                values.push(
+                    Number(item.forecast)
+                );
+
+            });
+
+
+            /* CHART */
+
+            createChart(dates, values);
+
+
+            status.className = "success";
+
+            status.innerText =
+                "Forecast generated successfully!";
+
+
+        } catch (error) {
+
+            console.error(error);
+
+            status.className = "error";
+
+            status.innerText =
+                "Error: " + error.message;
+
+        }
+
+    }
+
+
+    function createChart(dates, values) {
+
+        const canvas =
+            document.getElementById("forecastChart");
+
+
+        if (forecastChart) {
+
+            forecastChart.destroy();
+
+        }
+
+
+        forecastChart =
+            new Chart(canvas, {
+
+                type: "line",
+
+                data: {
+
+                    labels: dates,
+
+                    datasets: [
+
+                        {
+
+                            label: "Forecast",
+
+                            data: values,
+
+                            borderWidth: 3,
+
+                            tension: 0.3,
+
+                            fill: false,
+
+                            pointRadius: 3
+
+                        }
+
+                    ]
+
+                },
+
+                options: {
+
+                    responsive: true,
+
+                    maintainAspectRatio: false,
+
+                    plugins: {
+
+                        legend: {
+
+                            display: true
+
+                        },
+
+                        title: {
+
+                            display: true,
+
+                            text: "Forecasted Values"
+
+                        }
+
+                    },
+
+                    scales: {
+
+                        x: {
+
+                            title: {
+
+                                display: true,
+
+                                text: "Date"
+
+                            }
+
+                        },
+
+                        y: {
+
+                            title: {
+
+                                display: true,
+
+                                text: "Forecast Value"
+
+                            }
+
+                        }
+
+                    }
+
+                }
+
+            });
+
+    }
+
+</script>
+
+</body>
+</html>
